@@ -1,19 +1,26 @@
 <!DOCTYPE html>
 <html lang="tr">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Glob.io</title>
   <style>
-    body, html {
-      margin: 0; padding: 0; overflow: hidden; background: #222;
+    body,
+    html {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: #222;
       font-family: Arial, sans-serif;
       color: white;
       user-select: none;
     }
+
     #restartButton {
       position: fixed;
-      top: 10px; left: 50%;
+      top: 10px;
+      left: 50%;
       transform: translateX(-50%);
       padding: 10px 20px;
       font-size: 18px;
@@ -25,357 +32,525 @@
       display: none;
       z-index: 10;
     }
+
     #playerSizeDisplay {
       position: fixed;
-      bottom: 10px; left: 10px;
+      bottom: 10px;
+      left: 10px;
       font-size: 18px;
-      background: rgba(0,0,0,0.5);
+      background: rgba(0, 0, 0, 0.5);
       padding: 6px 12px;
       border-radius: 4px;
       user-select: none;
+      z-index: 10;
     }
+
     #miniMap {
       position: fixed;
-      bottom: 10px; right: 10px;
+      bottom: 10px;
+      right: 10px;
       border: 2px solid white;
       background: #222;
       border-radius: 8px;
       user-select: none;
+      z-index: 10;
     }
+
     canvas {
       display: block;
     }
+
+    /* Joystick container */
+    #joystickContainer {
+      position: fixed;
+      bottom: 60px;
+      left: 20px;
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.1);
+      display: none;
+      z-index: 15;
+      touch-action: none;
+    }
+
+    #joystickKnob {
+      position: absolute;
+      width: 60px;
+      height: 60px;
+      background: rgba(255, 255, 255, 0.4);
+      border-radius: 50%;
+      top: 30px;
+      left: 30px;
+      transition: top 0.1s, left 0.1s;
+      touch-action: none;
+    }
+
+    /* 700px altı ekranlarda joystick göster */
+    @media (max-width: 700px) {
+      #joystickContainer {
+        display: block;
+      }
+    }
   </style>
 </head>
+
 <body>
   <canvas id="game"></canvas>
   <canvas id="miniMap" width="200" height="200"></canvas>
   <button id="restartButton">Yeniden Başla</button>
   <div id="playerSizeDisplay">Hacmin: 30 px</div>
 
-<script>
-  const canvas = document.getElementById('game');
-  const ctx = canvas.getContext('2d');
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
+  <!-- Joystick UI -->
+  <div id="joystickContainer">
+    <div id="joystickKnob"></div>
+  </div>
 
-  const miniMapCanvas = document.getElementById('miniMap');
-  const miniCtx = miniMapCanvas.getContext('2d');
+  <script>
+    const canvas = document.getElementById('game');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
 
-  const BASE_MAP_SIZE = 2000;
-  const MAP_SCALE = 5;
-  const MAP_WIDTH = BASE_MAP_SIZE * MAP_SCALE;
-  const MAP_HEIGHT = BASE_MAP_SIZE * MAP_SCALE;
+    const miniMapCanvas = document.getElementById('miniMap');
+    const miniCtx = miniMapCanvas.getContext('2d');
 
-  const PLAYER_SPEED = 3;
-  const BOT_SPEED = 3;
+    const restartButton = document.getElementById('restartButton');
+    const playerSizeDisplay = document.getElementById('playerSizeDisplay');
 
-  const EMOJIS = [
-    '😀', '😃', '😄', '😁', '😆', '😅', '😂', '🤣', '😊', '😇',
-    '🙂', '🙃', '😉', '😌', '😍', '🥰', '😘', '😗', '😙', '😚',
-    '😋', '😛', '😝', '😜', '🤪', '🤨', '🧐', '🤓', '😎', '🥳',
-    '😏', '😒', '😞', '😔', '😟', '😕', '🙁', '☹️', '😣', '😖',
-    '😫', '😩', '🥺', '😢', '😭', '😤', '😠', '😡', '🤬', '😶‍🌫️'
-  ];
+    const joystickContainer = document.getElementById('joystickContainer');
+    const joystickKnob = document.getElementById('joystickKnob');
 
-  const restartButton = document.getElementById('restartButton');
+    const BASE_MAP_SIZE = 2000;
+    const MAP_SCALE = 5;
+    const MAP_WIDTH = BASE_MAP_SIZE * MAP_SCALE;
+    const MAP_HEIGHT = BASE_MAP_SIZE * MAP_SCALE;
 
-  const player = {
-    x: MAP_WIDTH / 2,
-    y: MAP_HEIGHT / 2,
-    size: 30,
-    color: 'lime',
-    speed: PLAYER_SPEED,
-    dx: 0,
-    dy: 0,
-    emoji: '😎'
-  };
+    const PLAYER_SPEED = 3;
+    const BOT_SPEED = 3;
 
-  const bots = [];
-  function spawnBot() {
-    return {
-      x: Math.random() * MAP_WIDTH,
-      y: Math.random() * MAP_HEIGHT,
+    const EMOJIS = [
+      '😀', '😃', '😄', '😁', '😆', '😅', '😂', '🤣', '😊', '😇',
+      '🙂', '🙃', '😉', '😌', '😍', '🥰', '😘', '😗', '😙', '😚',
+      '😋', '😛', '😝', '😜', '🤪', '🤨', '🧐', '🤓', '😎', '🥳',
+      '😏', '😒', '😞', '😔', '😟', '😕', '🙁', '☹️', '😣', '😖',
+      '😫', '😩', '🥺', '😢', '😭', '😤', '😠', '😡', '🤬', '😶‍🌫️'
+    ];
+
+    const player = {
+      x: MAP_WIDTH / 2,
+      y: MAP_HEIGHT / 2,
       size: 30,
-      color: getRandomColor(),
-      dx: (Math.random() - 0.5) * BOT_SPEED * 2,
-      dy: (Math.random() - 0.5) * BOT_SPEED * 2,
-      alive: true,
-      emoji: EMOJIS[Math.floor(Math.random() * EMOJIS.length)],
-      name: 'Bot'
+      color: 'lime',
+      speed: PLAYER_SPEED,
+      dx: 0,
+      dy: 0,
+      emoji: '😎'
     };
-  }
 
-  function getRandomColor() {
-    const letters = '0123456789ABCDEF';
-    let color = '#';
-    for (let i = 0; i < 6; i++) {
-      color += letters[Math.floor(Math.random() * 16)];
-    }
-    return color;
-  }
-
-  for (let i = 0; i < 30; i++) {
-    bots.push(spawnBot());
-  }
-
-  const foods = [];
-  function spawnFoods(count) {
-    for (let i = 0; i < count; i++) {
-      foods.push({
+    const bots = [];
+    function spawnBot() {
+      return {
         x: Math.random() * MAP_WIDTH,
         y: Math.random() * MAP_HEIGHT,
-        size: 8,
-        color: 'yellow'
-      });
-    }
-  }
-  spawnFoods(700);
-
-  window.addEventListener('keydown', e => {
-    if (e.key === 'ArrowUp') player.dy = -player.speed;
-    if (e.key === 'ArrowDown') player.dy = player.speed;
-    if (e.key === 'ArrowLeft') player.dx = -player.speed;
-    if (e.key === 'ArrowRight') player.dx = player.speed;
-  });
-  window.addEventListener('keyup', e => {
-    if (['ArrowUp', 'ArrowDown'].includes(e.key)) player.dy = 0;
-    if (['ArrowLeft', 'ArrowRight'].includes(e.key)) player.dx = 0;
-  });
-
-  function drawCircle(entity, cameraX, cameraY, scale = 1) {
-    const radius = entity.size * scale;
-
-    ctx.beginPath();
-    ctx.arc((entity.x - cameraX) * scale, (entity.y - cameraY) * scale, radius, 0, Math.PI * 2);
-    ctx.fillStyle = entity.color;
-    ctx.fill();
-
-    if (entity.emoji) {
-      ctx.font = `${radius * 1.5}px Arial`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(entity.emoji, (entity.x - cameraX) * scale, (entity.y - cameraY) * scale);
-    }
-  }
-
-  function drawFood(food, cameraX, cameraY, scale = 1) {
-    ctx.beginPath();
-    ctx.arc((food.x - cameraX) * scale, (food.y - cameraY) * scale, food.size * scale, 0, Math.PI * 2);
-    ctx.fillStyle = food.color;
-    ctx.fill();
-  }
-
-  function getDistance(a, b) {
-    return Math.hypot(a.x - b.x, a.y - b.y);
-  }
-
-  function moveBot(bot) {
-    if (!bot.alive) return;
-
-    if (Math.random() < 0.02) {
-      bot.dx = (Math.random() - 0.5) * BOT_SPEED * 2;
-      bot.dy = (Math.random() - 0.5) * BOT_SPEED * 2;
+        size: 30,
+        color: getRandomColor(),
+        dx: (Math.random() - 0.5) * BOT_SPEED * 2,
+        dy: (Math.random() - 0.5) * BOT_SPEED * 2,
+        alive: true,
+        emoji: EMOJIS[Math.floor(Math.random() * EMOJIS.length)],
+        name: 'Bot'
+      };
     }
 
-    let nearestFood = null;
-    let minFoodDist = Infinity;
-    for (let f of foods) {
-      const dist = getDistance(bot, f);
-      if (dist < minFoodDist) {
-        minFoodDist = dist;
-        nearestFood = f;
+    function getRandomColor() {
+      const letters = '0123456789ABCDEF';
+      let color = '#';
+      for (let i = 0; i < 6; i++) {
+        color += letters[Math.floor(Math.random() * 16)];
+      }
+      return color;
+    }
+
+    for (let i = 0; i < 30; i++) {
+      bots.push(spawnBot());
+    }
+
+    const foods = [];
+    function spawnFoods(count) {
+      for (let i = 0; i < count; i++) {
+        foods.push({
+          x: Math.random() * MAP_WIDTH,
+          y: Math.random() * MAP_HEIGHT,
+          size: 8,
+          color: 'yellow'
+        });
+      }
+    }
+    spawnFoods(700);
+
+    // Kontrol modu: 'keyboard' veya 'joystick'
+    let controlMode = window.innerWidth <= 700 ? 'joystick' : 'keyboard';
+
+    // Klavye hareket
+    const keys = {
+      ArrowUp: false,
+      ArrowDown: false,
+      ArrowLeft: false,
+      ArrowRight: false
+    };
+
+    window.addEventListener('keydown', e => {
+      if (controlMode !== 'keyboard') return; // sadece keyboard modda çalış
+      if (e.key in keys) keys[e.key] = true;
+      updatePlayerVelocityFromKeys();
+    });
+
+    window.addEventListener('keyup', e => {
+      if (controlMode !== 'keyboard') return;
+      if (e.key in keys) keys[e.key] = false;
+      updatePlayerVelocityFromKeys();
+    });
+
+    function updatePlayerVelocityFromKeys() {
+      player.dx = 0;
+      player.dy = 0;
+      if (keys.ArrowUp) player.dy = -player.speed;
+      else if (keys.ArrowDown) player.dy = player.speed;
+      if (keys.ArrowLeft) player.dx = -player.speed;
+      else if (keys.ArrowRight) player.dx = player.speed;
+    }
+
+    // Joystick hareketi
+    let dragging = false;
+    let joystickCenter = { x: 60, y: 60 }; // joystick container orta noktası
+    let maxDistance = 50; // knob hareket sınırı
+
+    function onPointerDown(e) {
+      e.preventDefault();
+      dragging = true;
+      moveJoystick(e);
+    }
+
+    function onPointerMove(e) {
+      if (!dragging) return;
+      e.preventDefault();
+      moveJoystick(e);
+    }
+
+    function onPointerUp(e) {
+      dragging = false;
+      resetJoystick();
+      e.preventDefault();
+    }
+
+    function moveJoystick(e) {
+      let clientX, clientY;
+      if (e.touches) {
+        clientX = e.touches[0].clientX;
+        clientY = e.touches[0].clientY;
+      } else {
+        clientX = e.clientX;
+        clientY = e.clientY;
+      }
+
+      const rect = joystickContainer.getBoundingClientRect();
+      let x = clientX - rect.left;
+      let y = clientY - rect.top;
+
+      // joystick merkezine göre offset
+      let dx = x - joystickCenter.x;
+      let dy = y - joystickCenter.y;
+
+      // sınırla
+      const dist = Math.hypot(dx, dy);
+      if (dist > maxDistance) {
+        dx = (dx / dist) * maxDistance;
+        dy = (dy / dist) * maxDistance;
+      }
+
+      joystickKnob.style.left = `${joystickCenter.x + dx - joystickKnob.offsetWidth / 2}px`;
+      joystickKnob.style.top = `${joystickCenter.y + dy - joystickKnob.offsetHeight / 2}px`;
+
+      // Oyuncu hareketini ayarla
+      const normDx = dx / maxDistance;
+      const normDy = dy / maxDistance;
+      player.dx = normDx * player.speed;
+      player.dy = normDy * player.speed;
+    }
+
+    function resetJoystick() {
+      joystickKnob.style.left = `${joystickCenter.x - joystickKnob.offsetWidth / 2}px`;
+      joystickKnob.style.top = `${joystickCenter.y - joystickKnob.offsetHeight / 2}px`;
+      player.dx = 0;
+      player.dy = 0;
+    }
+
+    joystickContainer.addEventListener('pointerdown', onPointerDown);
+    window.addEventListener('pointermove', onPointerMove);
+    window.addEventListener('pointerup', onPointerUp);
+    window.addEventListener('pointercancel', onPointerUp);
+    window.addEventListener('touchend', onPointerUp);
+
+    // Ekran boyutu değiştiğinde kontrol modunu güncelle
+    window.addEventListener('resize', () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      const wasControlMode = controlMode;
+      controlMode = window.innerWidth <= 700 ? 'joystick' : 'keyboard';
+
+      // Joystick göster/gizle
+      if (controlMode === 'joystick') {
+        joystickContainer.style.display = 'block';
+        resetJoystick();
+        player.dx = 0;
+        player.dy = 0;
+      } else {
+        joystickContainer.style.display = 'none';
+        player.dx = 0;
+        player.dy = 0;
+      }
+
+      // Eğer kontrol modu değiştiyse, tuş durumlarını sıfırla
+      if (wasControlMode !== controlMode) {
+        for (let key in keys) keys[key] = false;
+      }
+    });
+
+    // Diğer oyun fonksiyonları ve mekanikleri aynen kalıyor...
+
+    function drawCircle(entity, cameraX, cameraY, scale = 1) {
+      const radius = entity.size * scale;
+
+      ctx.beginPath();
+      ctx.arc((entity.x - cameraX) * scale, (entity.y - cameraY) * scale, radius, 0, Math.PI * 2);
+      ctx.fillStyle = entity.color;
+      ctx.fill();
+
+      if (entity.emoji) {
+        ctx.font = `${radius * 1.5}px Arial`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(entity.emoji, (entity.x - cameraX) * scale, (entity.y - cameraY) * scale);
       }
     }
 
-    for (let otherBot of bots) {
-      if (otherBot === bot || !otherBot.alive) continue;
-      const dist = getDistance(bot, otherBot);
-      if (dist < minFoodDist && bot.size > otherBot.size + 5) {
-        minFoodDist = dist;
-        nearestFood = otherBot;
-      }
+    function drawFood(food, cameraX, cameraY, scale = 1) {
+      ctx.beginPath();
+      ctx.arc((food.x - cameraX) * scale, (food.y - cameraY) * scale, food.size * scale, 0, Math.PI * 2);
+      ctx.fillStyle = food.color;
+      ctx.fill();
     }
 
-    if (nearestFood) {
-      let angle = Math.atan2(nearestFood.y - bot.y, nearestFood.x - bot.x);
-      bot.dx = Math.cos(angle) * BOT_SPEED;
-      bot.dy = Math.sin(angle) * BOT_SPEED;
+    function getDistance(a, b) {
+      return Math.hypot(a.x - b.x, a.y - b.y);
     }
 
-    bot.x += bot.dx;
-    bot.y += bot.dy;
-
-    if (bot.x < bot.size) bot.x = bot.size;
-    if (bot.y < bot.size) bot.y = bot.size;
-    if (bot.x > MAP_WIDTH - bot.size) bot.x = MAP_WIDTH - bot.size;
-    if (bot.y > MAP_HEIGHT - bot.size) bot.y = MAP_HEIGHT - bot.size;
-  }
-
-  function update() {
-    player.x += player.dx;
-    player.y += player.dy;
-    player.x = Math.min(Math.max(player.size, player.x), MAP_WIDTH - player.size);
-    player.y = Math.min(Math.max(player.size, player.y), MAP_HEIGHT - player.size);
-
-    bots.forEach(moveBot);
-
-    for (let i = foods.length - 1; i >= 0; i--) {
-      if (getDistance(player, foods[i]) < player.size) {
-        player.size += 5;
-        foods.splice(i, 1);
-      }
-    }
-
-    bots.forEach(bot => {
+    function moveBot(bot) {
       if (!bot.alive) return;
 
-      for (let i = foods.length - 1; i >= 0; i--) {
-        if (getDistance(bot, foods[i]) < bot.size) {
-          bot.size += 5;
-          foods.splice(i, 1);
+      if (Math.random() < 0.02) {
+        bot.dx = (Math.random() - 0.5) * BOT_SPEED * 2;
+        bot.dy = (Math.random() - 0.5) * BOT_SPEED * 2;
+      }
+
+      let nearestFood = null;
+      let minFoodDist = Infinity;
+      for (let f of foods) {
+        const dist = getDistance(bot, f);
+        if (dist < minFoodDist) {
+          minFoodDist = dist;
+          nearestFood = f;
         }
       }
 
       for (let otherBot of bots) {
         if (otherBot === bot || !otherBot.alive) continue;
         const dist = getDistance(bot, otherBot);
-        if (dist < bot.size && bot.size > otherBot.size + 5) {
-          bot.size += otherBot.size / 2;
-          killBot(otherBot);
+        if (dist < minFoodDist && bot.size > otherBot.size + 5) {
+          minFoodDist = dist;
+          nearestFood = otherBot;
         }
       }
-    });
 
-    for (let bot of bots) {
-      if (!bot.alive) continue;
-      const dist = getDistance(player, bot);
-      if (dist < player.size && player.size > bot.size + 5) {
-        player.size += bot.size / 2;
-        killBot(bot);
-      } else if (dist < bot.size && bot.size > player.size + 5) {
-        restartButton.style.display = 'block'; // alert yerine buton göster
-        cancelAnimationFrame(gameLoopId); // animasyonu durdur
-        return;
+      if (nearestFood) {
+        let angle = Math.atan2(nearestFood.y - bot.y, nearestFood.x - bot.x);
+        bot.dx = Math.cos(angle) * BOT_SPEED;
+        bot.dy = Math.sin(angle) * BOT_SPEED;
+      }
+
+      bot.x += bot.dx;
+      bot.y += bot.dy;
+
+      if (bot.x < bot.size) bot.x = bot.size;
+      if (bot.y < bot.size) bot.y = bot.size;
+      if (bot.x > MAP_WIDTH - bot.size) bot.x = MAP_WIDTH - bot.size;
+      if (bot.y > MAP_HEIGHT - bot.size) bot.y = MAP_HEIGHT - bot.size;
+    }
+
+    function update() {
+      player.x += player.dx;
+      player.y += player.dy;
+      player.x = Math.min(Math.max(player.size, player.x), MAP_WIDTH - player.size);
+      player.y = Math.min(Math.max(player.size, player.y), MAP_HEIGHT - player.size);
+
+      bots.forEach(moveBot);
+
+      for (let i = foods.length - 1; i >= 0; i--) {
+        if (getDistance(player, foods[i]) < player.size) {
+          player.size += 5;
+          foods.splice(i, 1);
+        }
+      }
+
+      bots.forEach(bot => {
+        if (!bot.alive) return;
+
+        for (let i = foods.length - 1; i >= 0; i--) {
+          if (getDistance(bot, foods[i]) < bot.size) {
+            bot.size += 5;
+            foods.splice(i, 1);
+          }
+        }
+
+        for (let otherBot of bots) {
+          if (otherBot === bot || !otherBot.alive) continue;
+          const dist = getDistance(bot, otherBot);
+          if (dist < bot.size && bot.size > otherBot.size + 5) {
+            bot.size += otherBot.size / 2;
+            killBot(otherBot);
+          }
+        }
+      });
+
+      for (let bot of bots) {
+        if (!bot.alive) continue;
+        const dist = getDistance(player, bot);
+        if (dist < player.size && player.size > bot.size + 5) {
+          player.size += bot.size / 2;
+          killBot(bot);
+        } else if (dist < bot.size && bot.size > player.size + 5) {
+          restartButton.style.display = 'block'; // butonu göster
+          cancelAnimationFrame(gameLoopId); // animasyonu durdur
+          return;
+        }
+      }
+
+      if (foods.length < 300) {
+        spawnFoods(400);
       }
     }
 
-    if (foods.length < 300) {
-      spawnFoods(400);
+    function killBot(bot) {
+      bot.alive = false;
+      setTimeout(() => {
+        Object.assign(bot, spawnBot());
+        bot.alive = true;
+      }, 10000);
     }
-  }
 
-  function killBot(bot) {
-    bot.alive = false;
-    setTimeout(() => {
-      Object.assign(bot, spawnBot());
-      bot.alive = true;
-    }, 10000);
-  }
+    function getCameraScale() {
+      const baseSize = 30;
+      const maxScaleSize = 2000;
+      const effectiveSize = Math.min(player.size, maxScaleSize);
+      const scale = 1 / Math.log2(effectiveSize / baseSize + 1);
+      return Math.max(0.03, scale);
+    }
 
-  // Burada değişiklik yaptığımız fonksiyon:
-  function getCameraScale() {
-    const baseSize = 30;
-    const maxScaleSize = 2000; // 2000 px üstünde ölçek sabit kalsın
-    const effectiveSize = Math.min(player.size, maxScaleSize);
-    const scale = 1 / Math.log2(effectiveSize / baseSize + 1);
-    return Math.max(0.03, scale);
-  }
+    function drawMiniMap() {
+      miniCtx.clearRect(0, 0, miniMapCanvas.width, miniMapCanvas.height);
 
-  function drawMiniMap() {
-    miniCtx.clearRect(0, 0, miniMapCanvas.width, miniMapCanvas.height);
+      miniCtx.fillStyle = '#222';
+      miniCtx.fillRect(0, 0, miniMapCanvas.width, miniMapCanvas.height);
 
-    miniCtx.fillStyle = '#222';
-    miniCtx.fillRect(0, 0, miniMapCanvas.width, miniMapCanvas.height);
+      const scaleX = miniMapCanvas.width / MAP_WIDTH;
+      const scaleY = miniMapCanvas.height / MAP_HEIGHT;
 
-    const scaleX = miniMapCanvas.width / MAP_WIDTH;
-    const scaleY = miniMapCanvas.height / MAP_HEIGHT;
-
-    miniCtx.fillStyle = 'yellow';
-    foods.forEach(food => {
-      miniCtx.beginPath();
-      miniCtx.arc(food.x * scaleX, food.y * scaleY, 1.5, 0, Math.PI * 2);
-      miniCtx.fill();
-    });
-
-    bots.forEach(bot => {
-      if (bot.alive) {
-        miniCtx.fillStyle = bot.color;
+      miniCtx.fillStyle = 'yellow';
+      foods.forEach(food => {
         miniCtx.beginPath();
-        miniCtx.arc(bot.x * scaleX, bot.y * scaleY, 3, 0, Math.PI * 2);
+        miniCtx.arc(food.x * scaleX, food.y * scaleY, 1.5, 0, Math.PI * 2);
         miniCtx.fill();
-      }
+      });
+
+      bots.forEach(bot => {
+        if (bot.alive) {
+          miniCtx.fillStyle = bot.color;
+          miniCtx.beginPath();
+          miniCtx.arc(bot.x * scaleX, bot.y * scaleY, 3, 0, Math.PI * 2);
+          miniCtx.fill();
+        }
+      });
+
+      miniCtx.strokeStyle = 'white';
+      miniCtx.lineWidth = 2;
+      miniCtx.beginPath();
+      miniCtx.arc(player.x * scaleX, player.y * scaleY, 5, 0, Math.PI * 2);
+      miniCtx.stroke();
+
+      const scale = getCameraScale();
+      const camWidth = miniMapCanvas.width / scale;
+      const camHeight = miniMapCanvas.height / scale;
+
+      let camX = player.x - (canvas.width / (2 * scale));
+      let camY = player.y - (canvas.height / (2 * scale));
+
+      camX *= scaleX;
+      camY *= scaleY;
+
+      miniCtx.strokeStyle = 'white';
+      miniCtx.lineWidth = 1;
+      miniCtx.strokeRect(camX, camY, camWidth * scaleX, camHeight * scaleY);
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const scale = getCameraScale();
+
+      let camX = player.x - canvas.width / (2 * scale);
+      let camY = player.y - canvas.height / (2 * scale);
+
+      camX = Math.min(Math.max(camX, 0), MAP_WIDTH - canvas.width / scale);
+      camY = Math.min(Math.max(camY, 0), MAP_HEIGHT - canvas.height / scale);
+
+      foods.forEach(food => drawFood(food, camX, camY, scale));
+      bots.forEach(bot => {
+        if (bot.alive) drawCircle(bot, camX, camY, scale);
+      });
+      drawCircle(player, camX, camY, scale);
+
+      playerSizeDisplay.textContent = `Hacmin: ${Math.round(player.size)} px`;
+
+      drawMiniMap();
+    }
+
+    let gameLoopId;
+    function gameLoop() {
+      update();
+      draw();
+      gameLoopId = requestAnimationFrame(gameLoop);
+    }
+
+    restartButton.addEventListener('click', () => {
+      player.x = MAP_WIDTH / 2;
+      player.y = MAP_HEIGHT / 2;
+      player.size = 30;
+      restartButton.style.display = 'none';
+      bots.forEach(bot => Object.assign(bot, spawnBot()));
+      foods.length = 0;
+      spawnFoods(700);
+      if (controlMode === 'joystick') resetJoystick();
+      gameLoopId = requestAnimationFrame(gameLoop);
     });
 
-    miniCtx.strokeStyle = 'white';
-    miniCtx.lineWidth = 2;
-    miniCtx.beginPath();
-    miniCtx.arc(player.x * scaleX, player.y * scaleY, 5, 0, Math.PI * 2);
-    miniCtx.stroke();
+    // Başlat
+    if (controlMode === 'joystick') joystickContainer.style.display = 'block';
+    else joystickContainer.style.display = 'none';
 
-    const scale = getCameraScale();
-    const camWidth = miniMapCanvas.width / scale;
-    const camHeight = miniMapCanvas.height / scale;
-
-    let camX = player.x - (canvas.width / (2 * scale));
-    let camY = player.y - (canvas.height / (2 * scale));
-
-    camX *= scaleX;
-    camY *= scaleY;
-
-    miniCtx.strokeStyle = 'white';
-    miniCtx.lineWidth = 1;
-    miniCtx.strokeRect(camX, camY, camWidth * scaleX, camHeight * scaleY);
-  }
-
-  let gameLoopId;
-  function gameLoop() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    update();
-
-    const scale = getCameraScale();
-    const cameraX = player.x - canvas.width / (2 * scale);
-    const cameraY = player.y - canvas.height / (2 * scale);
-
-    ctx.save();
-    ctx.scale(scale, scale);
-    ctx.translate(-cameraX, -cameraY);
-
-    ctx.fillStyle = '#444';
-    ctx.fillRect(0, 0, MAP_WIDTH, MAP_HEIGHT);
-
-    foods.forEach(food => drawFood(food, 0, 0));
-
-    bots.forEach(bot => {
-      if (bot.alive) drawCircle(bot, 0, 0);
-    });
-
-    drawCircle(player, 0, 0);
-
-    ctx.restore();
-
-    drawMiniMap();
-
-    document.getElementById('playerSizeDisplay').textContent = `Hacmin: ${Math.round(player.size)} px`;
-
-    gameLoopId = requestAnimationFrame(gameLoop);
-  }
-
-  gameLoop();
-
-  window.addEventListener('resize', () => {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-  });
-
-  restartButton.onclick = () => {
-    player.size = 30;
-    player.x = MAP_WIDTH / 2;
-    player.y = MAP_HEIGHT / 2;
-    restartButton.style.display = 'none';
     gameLoop();
-  };
-</script>
+  </script>
 </body>
+
 </html>
